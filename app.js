@@ -6,20 +6,20 @@
 // 1. DATOS BASE
 // --------------------------------------------------
 const GOALS_DATA = [
-  { id: 1, peso: 10, rubro: 'Var SM V+A Soles y Dólares', meta: 300000, real: 876046.76, isMultiplicador: false, isStock: true },
-  { id: 2, peso: 13, rubro: 'Facturación Pyme', meta: 2568000, real: 841274.57, isMultiplicador: false, isStock: false },
-  { id: 3, peso: 10, rubro: 'Facturación Clientes Nuevos', meta: 385000, real: 58997.05, isMultiplicador: false, isStock: false },
-  { id: 4, peso: 10, rubro: 'Seguros (Primas)', meta: 19600, real: 1508, isMultiplicador: false, isStock: false },
-  { id: 5, peso: 12, rubro: 'Altas de Nóminas', meta: 89, real: 65, isMultiplicador: false, isStock: false },
-  { id: 6, peso: 5, rubro: 'Acciones Comerciales (Afiliaciones)', meta: 12, real: 1, isMultiplicador: false, isStock: false },
-  { id: 7, peso: 5, rubro: 'Acciones Comerciales (Altas)', meta: 1, real: 0, isMultiplicador: false, isStock: false },
-  { id: 8, peso: 5, rubro: 'Contención Pyme', meta: 47589.056, real: 0, isMultiplicador: false, isStock: false },
-  { id: 9, peso: 0, rubro: 'MultiplicaDOR RCP', meta: 0, real: 0, isMultiplicador: true, isStock: false },
-  { id: 10, peso: 3, rubro: 'Solución Pyme', meta: 1479900, real: 0, isMultiplicador: false, isStock: false },
-  { id: 11, peso: 10, rubro: 'POS (puntos)', meta: 6, real: 0, isMultiplicador: false, isStock: false },
-  { id: 12, peso: 8, rubro: 'Efectividad de Contención', meta: 49068.956, real: 0, isMultiplicador: false, isStock: false },
-  { id: 13, peso: 9, rubro: 'Flujos QR Empresa', meta: 54749, real: 0, isMultiplicador: false, isStock: false },
-  { id: 14, peso: 8, rubro: 'Var. SM Inversión Rentable', meta: 419000, real: -44197.36, isMultiplicador: false, isStock: true },
+  { id: 1, peso: 10, rubro: 'Var SM V+A Soles y Dólares', meta: 300000, real: 876046.76, avance: 0, isMultiplicador: false, isStock: true },
+  { id: 2, peso: 13, rubro: 'Facturación Pyme', meta: 2568000, real: 841274.57, avance: 0, isMultiplicador: false, isStock: false },
+  { id: 3, peso: 10, rubro: 'Facturación Clientes Nuevos', meta: 385000, real: 58997.05, avance: 0, isMultiplicador: false, isStock: false },
+  { id: 4, peso: 10, rubro: 'Seguros (Primas)', meta: 19600, real: 1508, avance: 0, isMultiplicador: false, isStock: false },
+  { id: 5, peso: 12, rubro: 'Altas de Nóminas', meta: 89, real: 65, avance: 0, isMultiplicador: false, isStock: false },
+  { id: 6, peso: 5, rubro: 'Acciones Comerciales (Afiliaciones)', meta: 12, real: 1, avance: 0, isMultiplicador: false, isStock: false },
+  { id: 7, peso: 5, rubro: 'Acciones Comerciales (Altas)', meta: 1, real: 0, avance: 0, isMultiplicador: false, isStock: false },
+  { id: 8, peso: 5, rubro: 'Contención Pyme', meta: 47589.056, real: 0, avance: 0, isMultiplicador: false, isStock: false },
+  { id: 9, peso: 0, rubro: 'MultiplicaDOR RCP', meta: 0, real: 0, avance: 0, isMultiplicador: true, isStock: false },
+  { id: 10, peso: 3, rubro: 'Solución Pyme', meta: 1479900, real: 0, avance: 0, isMultiplicador: false, isStock: false },
+  { id: 11, peso: 10, rubro: 'POS (puntos)', meta: 6, real: 0, avance: 0, isMultiplicador: false, isStock: false },
+  { id: 12, peso: 8, rubro: 'Efectividad de Contención', meta: 49068.956, real: 0, avance: 0, isMultiplicador: false, isStock: false },
+  { id: 13, peso: 9, rubro: 'Flujos QR Empresa', meta: 54749, real: 0, avance: 0, isMultiplicador: false, isStock: false },
+  { id: 14, peso: 8, rubro: 'Var. SM Inversión Rentable', meta: 419000, real: -44197.36, avance: 0, isMultiplicador: false, isStock: true },
 ];
 
 const TOTAL_DAYS = 30;
@@ -38,7 +38,8 @@ function clamp(v, min, max) { return Math.min(max, Math.max(min, v)); }
 
 function calcConsecucion(goal) {
   if (goal.meta === 0) return 0;
-  return Math.max(0, (goal.real / goal.meta) * 100);
+  const totalReal = goal.real + (goal.avance || 0);
+  return Math.max(0, (totalReal / goal.meta) * 100);
 }
 
 function calcReconocimiento(cons) {
@@ -106,7 +107,8 @@ function renderTable() {
     const pts    = calcPuntamat(goal);
     totalPts    += pts;
 
-    const proyectado = proyectarAlMes(goal.real, currentSimDay);
+    const totalReal = goal.real + (goal.avance || 0);
+    const proyectado = proyectarAlMes(totalReal, currentSimDay);
     const consProy   = goal.meta > 0 ? Math.max(0, (proyectado / goal.meta) * 100) : 0;
     
     const barWidth = clamp(cons, 0, 100);
@@ -125,7 +127,12 @@ function renderTable() {
       <td class="td-meta">${goal.meta === 0 ? '—' : fmt(goal.meta, goal.meta < 100 ? 0 : 2)}</td>
       <td class="td-real">
         <div class="inline-input-wrapper">
-          <input type="number" class="inline-input" data-id="${goal.id}" value="${goal.real}" step="any" />
+          <input type="number" class="inline-input" data-id="${goal.id}" data-field="real" value="${goal.real}" step="any" />
+        </div>
+      </td>
+      <td class="td-avance">
+        <div class="inline-input-wrapper">
+          <input type="number" class="inline-input" data-id="${goal.id}" data-field="avance" value="${goal.avance || 0}" step="any" style="color:var(--color-green);border-color:var(--color-green)" />
         </div>
       </td>
       <td class="td-proyectado" style="color:${proyColor}">
@@ -160,10 +167,11 @@ function renderTable() {
   document.querySelectorAll('.inline-input').forEach(input => {
     input.addEventListener('change', (e) => {
       const id = parseInt(e.target.dataset.id);
+      const field = e.target.dataset.field; // "real" o "avance"
       const val = parseFloat(e.target.value);
       const goal = goals.find(g => g.id === id);
       if (goal && !isNaN(val)) {
-        goal.real = val;
+        goal[field] = val;
         saveToStorage();
         updateAll();
       }
@@ -198,7 +206,7 @@ function renderSummaryCards() {
       <div class="sc-value-row">
         <div class="sc-pct text-gradient" style="background:${grad}; -webkit-background-clip: text;">${fmtPct(cons)}</div>
       </div>
-      <div class="sc-real">Real: ${fmt(goal.real)} / Meta: ${fmt(goal.meta, 0)}</div>
+      <div class="sc-real">Simulado: ${fmt(goal.real + (goal.avance || 0))} / Meta: ${fmt(goal.meta, 0)}</div>
       <div class="sc-bar-bg">
         <div class="sc-bar-fill" style="width:${barW}%; background:${grad}"></div>
       </div>
@@ -237,7 +245,8 @@ function updateProjectionPill(day) {
   let goalsOnTrack  = 0;
 
   activeGoals.forEach(g => {
-    if (proyectarAlMes(g.real, day) >= g.meta) goalsOnTrack++;
+    const totalReal = g.real + (g.avance || 0);
+    if (proyectarAlMes(totalReal, day) >= g.meta) goalsOnTrack++;
   });
 
   const pct = (goalsOnTrack / activeGoals.length) * 100;
@@ -275,7 +284,7 @@ const LS_KEY   = 'metas_goals_premium';
 const LS_DATE  = 'metas_lastupdate_premium';
 
 function saveToStorage() {
-  localStorage.setItem(LS_KEY, JSON.stringify(goals.map(g => ({ id: g.id, real: g.real }))));
+  localStorage.setItem(LS_KEY, JSON.stringify(goals.map(g => ({ id: g.id, real: g.real, avance: g.avance }))));
   localStorage.setItem(LS_DATE, new Date().toISOString());
 }
 
@@ -285,7 +294,10 @@ function loadFromStorage() {
     if (!raw) return false;
     JSON.parse(raw).forEach(s => {
       const g = goals.find(x => x.id === s.id);
-      if (g) g.real = s.real;
+      if (g) {
+        if (s.real !== undefined) g.real = s.real;
+        if (s.avance !== undefined) g.avance = s.avance;
+      }
     });
     return true;
   } catch { return false; }
