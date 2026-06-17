@@ -267,18 +267,75 @@ function updateProjectionPill(day) {
 }
 
 // --------------------------------------------------
-// 6. GENERAL UPDATER
+// 6. STRATEGY PANEL (NUEVO)
+// --------------------------------------------------
+function renderStrategyPanel() {
+  const container = document.getElementById('strategy-grid');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const activeGoals = goals.filter(g => !g.isMultiplicador && g.meta > 0);
+  const diasRestantes = Math.max(1, TOTAL_DAYS - currentSimDay + 1);
+
+  const stratData = activeGoals.map(g => {
+    const totalReal = g.real + (g.avance || 0);
+    const target140 = g.meta * 1.4;
+    const missing = Math.max(0, target140 - totalReal);
+    const quota = missing / diasRestantes;
+    
+    // Si ya superó el 140%, missing es 0
+    return { ...g, totalReal, target140, missing, quota };
+  }).filter(g => g.missing > 0);
+
+  // Ordenar por Peso (para enfocarse en las que dan más puntos)
+  stratData.sort((a, b) => b.peso - a.peso);
+
+  // Tomar las top 3 o mostrar un mensaje si todo está al 140%
+  const topStrats = stratData.slice(0, 3);
+
+  if (topStrats.length === 0) {
+    container.innerHTML = `<div style="color:var(--color-green); font-weight:700; padding:10px;">¡Felicidades! Todas las metas han alcanzado el 140%.</div>`;
+    return;
+  }
+
+  topStrats.forEach(g => {
+    const card = document.createElement('div');
+    card.className = 'strat-card';
+    
+    card.innerHTML = `
+      <div class="strat-card-header">
+        <div class="strat-title">${g.rubro}</div>
+        <div class="strat-peso">Peso: ${g.peso}</div>
+      </div>
+      
+      <div class="strat-gap-row">
+        <span class="strat-gap-label">Brecha al 140%:</span>
+        <span class="strat-gap-val">${fmt(g.missing, g.meta < 100 ? 0 : 2)}</span>
+      </div>
+
+      <div class="strat-action-box">
+        <span class="strat-action-label">Deberías hacer hoy:</span>
+        <span class="strat-action-val">+ ${fmt(g.quota, g.meta < 100 ? 0 : 2)}</span>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+// --------------------------------------------------
+// 7. GENERAL UPDATER
 // --------------------------------------------------
 function updateAll() {
   renderTable();
   renderSummaryCards();
+  renderStrategyPanel();
   updateTimeline(currentSimDay);
   updateProjectionPill(currentSimDay);
   showLastUpdate();
 }
 
 // --------------------------------------------------
-// 7. STORAGE & CLOCK
+// 8. STORAGE & CLOCK
 // --------------------------------------------------
 const LS_KEY   = 'metas_goals_premium';
 const LS_DATE  = 'metas_lastupdate_premium';
