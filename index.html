@@ -108,29 +108,33 @@
             </button>
           </div>
         </section>
-
-        <!-- Tarjetas de Resumen (Carousel/Grid) -->
-        <section class="summary-section">
-          <h2 class="section-title">Resumen de Consecución</h2>
-          <div class="summary-grid" id="summary-cards">
-            <!-- Cards inyectadas por JS -->
+        <!-- Sección de Estrategia Diaria -->
+        <section class="strategy-section glass-panel">
+          <div class="strategy-header">
+            <div class="sh-left">
+              <h2 class="section-title">Estrategia Diaria (Objetivo 140%)</h2>
+              <p class="table-subtitle">Top 4 metas que requieren enfoque hoy para asegurar aceleradores máximos.</p>
+              <p style="margin-top: 8px; color: var(--accent-cyan); font-style: italic; font-weight: 500; font-size: 0.95rem;">"Todo lo puedo en Cristo que me fortalece"</p>
+              <p id="motivational-quote" style="margin-top: 4px; color: var(--text-muted); font-size: 0.85rem; font-weight: 400;"></p>
+            </div>
+            <div class="sh-right">
+              <div class="target-badge">🎯 Apuntando al 140%</div>
+            </div>
+          </div>
+          
+          <div class="strategy-grid" id="strategy-grid">
+            <!-- Inyectado por JS -->
           </div>
         </section>
       </div>
 
-      <!-- Sección de Estrategia Diaria -->
-      <section class="strategy-section glass-panel">
-        <div class="strategy-header">
-          <div class="sh-left">
-            <h2 class="section-title">Estrategia Diaria (Objetivo 140%)</h2>
-            <p class="table-subtitle">Top 3 metas que requieren enfoque hoy para asegurar aceleradores máximos.</p>
-          </div>
-          <div class="sh-right">
-            <div class="target-badge">🎯 Apuntando al 140%</div>
-          </div>
+      <!-- Sección Estadísticas Avanzadas -->
+      <section class="advanced-stats-section glass-panel">
+        <div class="section-header">
+          <h2 class="section-title">Estadísticas Avanzadas</h2>
+          <p class="table-subtitle">Análisis predictivo del rendimiento para el cierre del mes.</p>
         </div>
-        
-        <div class="strategy-grid" id="strategy-grid">
+        <div class="adv-grid" id="advanced-stats-grid">
           <!-- Inyectado por JS -->
         </div>
       </section>
@@ -157,10 +161,8 @@
                 <th class="th-meta">META</th>
                 <th class="th-real">REAL BASE <span class="edit-icon">✎</span></th>
                 <th class="th-avance">AVANCE HOY <span class="edit-icon">✎</span></th>
-                <th class="th-proyectado">PROYECTADO (AL 30)</th>
+                <th class="th-proyectado">FALTA P/ 140%</th>
                 <th class="th-cons">CONSECUCIÓN</th>
-                <th class="th-recono">RECONOCIMIENTO</th>
-                <th class="th-bar">PROGRESO</th>
                 <th class="th-pts">PTS</th>
               </tr>
             </thead>
@@ -170,13 +172,12 @@
             <tfoot>
               <tr>
                 <td colspan="4" class="tfoot-label">Total Puntos Matrícula</td>
-                <td colspan="5"><div class="min-pts-badge" id="min-pts-badge"></div></td>
+                <td colspan="3"><div class="min-pts-badge" id="min-pts-badge"></div></td>
                 <td class="tfoot-pts" id="total-pts">0.00</td>
               </tr>
             </tfoot>
           </table>
         </div>
-      </section>
     </main>
   </div>
 
@@ -191,6 +192,9 @@
         </div>
       </div>
       <div class="ls-drawer-actions">
+        <button class="btn-premium" id="ls-btn-import" title="Copiar tabla de Looker y hacer clic aquí" style="padding: 6px 12px; font-size: 0.75rem; display: flex; align-items: center; gap: 6px; background: rgba(16, 185, 129, 0.2); color: var(--color-green); border: 1px solid rgba(16, 185, 129, 0.4); margin-right: 10px;">
+          📋 Pegar Datos
+        </button>
         <button class="icon-btn" id="ls-btn-refresh" title="Recargar">🔄</button>
         <button class="icon-btn" id="ls-btn-close" title="Cerrar">✕</button>
       </div>
