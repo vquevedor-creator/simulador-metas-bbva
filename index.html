@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulador de Metas Bancarias – Víctor Quevedo</title>
+  <meta name="description" content="Simulador en tiempo real de metas bancarias con progreso diario y seguimiento de consecución." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-left">
+      <div class="logo-area">
+        <div class="logo-icon">🏦</div>
+        <div>
+          <h1 class="header-title">Simulador de Metas</h1>
+          <p class="header-subtitle">VÍCTOR HUGO QUEVEDO RI. · EN-005448</p>
+        </div>
+      </div>
+    </div>
+    <div class="header-center">
+      <div class="date-badge">
+        <span id="current-date">Al 16/06/2026</span>
+        <span class="dot">·</span>
+        <span id="current-time">20:50:15</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="kpi-cards">
+        <div class="kpi-card matricula">
+          <span class="kpi-label">PTS. MATRÍCULA</span>
+          <span class="kpi-value" id="pts-matricula">0.00</span>
+        </div>
+        <div class="kpi-card multiplicador">
+          <span class="kpi-label">PTS. MULTIPLICADOR</span>
+          <span class="kpi-value" id="pts-multiplicador">0.00</span>
+        </div>
+        <div class="kpi-card cuartil">
+          <span class="kpi-label">CUARTIL TYC</span>
+          <span class="kpi-value" id="cuartil">2</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Progress del día -->
+  <section class="daily-progress-section">
+    <div class="day-progress-header">
+      <div class="day-info">
+        <span class="day-icon">📅</span>
+        <div>
+          <strong>Progreso del día</strong>
+          <small id="day-fraction">Día 16 de 30 del mes</small>
+        </div>
+      </div>
+      <div class="day-stats">
+        <span id="day-pct-label">53.3% del mes transcurrido</span>
+      </div>
+    </div>
+    <div class="timeline-bar-wrapper">
+      <div class="timeline-bar">
+        <div class="timeline-fill" id="timeline-fill"></div>
+        <div class="timeline-marker" id="timeline-marker">
+          <div class="marker-label" id="marker-label">Hoy</div>
+        </div>
+        <!-- Hitos del mes -->
+        <div class="milestone" style="left:25%"><span>Sem 1</span></div>
+        <div class="milestone" style="left:50%"><span>Sem 2</span></div>
+        <div class="milestone" style="left:75%"><span>Sem 3</span></div>
+      </div>
+      <div class="timeline-labels">
+        <span>01</span>
+        <span>08</span>
+        <span>15</span>
+        <span>22</span>
+        <span>30</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Controles de simulación -->
+  <section class="sim-controls">
+    <div class="sim-controls-inner">
+      <h2 class="section-title">⚡ Simulación de Avance Diario</h2>
+      <div class="controls-row">
+        <div class="control-group">
+          <label for="sim-day">Simular día del mes</label>
+          <div class="slider-row">
+            <input type="range" id="sim-day" min="1" max="30" value="16" class="slider" />
+            <span id="sim-day-val" class="slider-val">16</span>
+          </div>
+        </div>
+        <div class="control-group">
+          <label>Ritmo proyectado</label>
+          <div class="projection-pill" id="projection-pill">
+            <span id="projection-label">📈 Calculando...</span>
+          </div>
+        </div>
+        <button class="btn-looker" id="btn-open-looker">📊 Ver Looker Studio</button>
+        <button class="btn-sync" id="btn-open-sync">⚡ Actualizar valores</button>
+        <button class="btn-reset" id="btn-reset">🔄 Resetear</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tabla principal -->
+  <section class="table-section">
+    <div class="table-header-row">
+      <h2 class="section-title">📊 Metas – PASO 2</h2>
+      <div class="table-note-row">
+        <p class="table-note">(*) Incluye MultiplicaDOR RCP · Haz clic en <strong>REAL</strong> para editar</p>
+        <div class="last-update-badge" id="last-update-badge" style="display:none">
+          <span class="lu-dot"></span>
+          <span id="last-update-text">Última sync: —</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table class="goals-table" id="goals-table">
+        <thead>
+          <tr>
+            <th class="th-peso">PESO</th>
+            <th class="th-rubro">RUBRO</th>
+            <th class="th-meta">META</th>
+            <th class="th-real">REAL ▲</th>
+            <th class="th-proyectado">PROYECTADO AL 30</th>
+            <th class="th-cons">CONSECUCIÓN</th>
+            <th class="th-recono">RECONOCIMIENTO</th>
+            <th class="th-bar">PROGRESO</th>
+            <th class="th-pts">PUNTAMAT</th>
+          </tr>
+        </thead>
+        <tbody id="goals-tbody">
+          <!-- rows injected by JS -->
+        </tbody>
+        <tfoot>
+          <tr class="tfoot-row">
+            <td colspan="3" class="tfoot-label">PUNTOS MATRÍCULA TOTAL</td>
+            <td colspan="5"><span id="min-pts-badge" style="font-size:0.78rem;font-weight:600;"></span></td>
+            <td class="tfoot-pts" id="total-pts">0.00</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </section>
+
+  <!-- Resumen visual -->
+  <section class="summary-section">
+    <h2 class="section-title">🎯 Resumen de Consecución</h2>
+    <div class="summary-cards" id="summary-cards">
+      <!-- injected by JS -->
+    </div>
+  </section>
+
+  <!-- Modal de edición -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal" id="edit-modal">
+      <div class="modal-header">
+        <h3 id="modal-title">Editar valor REAL</h3>
+        <button class="modal-close" id="modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <label>Rubro: <strong id="modal-rubro"></strong></label>
+        <label>Meta: <strong id="modal-meta"></strong></label>
+        <div class="modal-input-row">
+          <label for="modal-input">Valor REAL actual:</label>
+          <input type="number" id="modal-input" class="modal-input" step="any" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" id="btn-cancel">Cancelar</button>
+        <button class="btn-save" id="btn-save">💾 Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================
+       LOOKER STUDIO DRAWER
+       ================================================ -->
+  <div class="ls-drawer" id="ls-drawer">
+    <div class="ls-drawer-header">
+      <div class="ls-drawer-title">
+        <span class="ls-icon">📊</span>
+        <div>
+          <strong>Looker Studio</strong>
+          <small>Reporte oficial del banco</small>
+        </div>
+      </div>
+      <div class="ls-drawer-actions">
+        <button class="ls-btn-refresh" id="ls-btn-refresh" title="Recargar reporte">🔄</button>
+        <button class="ls-btn-close" id="ls-btn-close">✕</button>
+      </div>
+    </div>
+    <div class="ls-drawer-body">
+      <div class="ls-login-notice" id="ls-login-notice">
+        <div class="ls-notice-icon">🔐</div>
+        <p>El reporte requiere tu cuenta Google del banco.</p>
+        <p>Asegúrate de haber iniciado sesión en Chrome con tu cuenta corporativa antes de cargar.</p>
+        <button class="ls-btn-load" id="ls-btn-load">Cargar reporte →</button>
+      </div>
+      <iframe
+        id="ls-iframe"
+        class="ls-iframe"
+        src=""
+        allowfullscreen
+        frameborder="0"
+        style="display:none"
+        title="Looker Studio – Metas Bancarias"
+      ></iframe>
+      <div class="ls-loading" id="ls-loading" style="display:none">
+        <div class="ls-spinner"></div>
+        <p>Cargando reporte...</p>
+      </div>
+    </div>
+  </div>
+  <div class="ls-backdrop" id="ls-backdrop"></div>
+
+  <!-- ================================================
+       MODAL ACTUALIZACIÓN MASIVA (SYNC)
+       ================================================ -->
+  <div class="modal-overlay" id="sync-overlay">
+    <div class="modal sync-modal" id="sync-modal">
+      <div class="modal-header">
+        <div class="sync-modal-title">
+          <span>⚡</span>
+          <div>
+            <h3>Actualización rápida de valores</h3>
+            <small>Ingresa los valores REAL de hoy desde Looker Studio</small>
+          </div>
+        </div>
+        <button class="modal-close" id="sync-modal-close">✕</button>
+      </div>
+      <div class="sync-modal-body" id="sync-fields-container">
+        <!-- injected by JS -->
+      </div>
+      <div class="modal-footer sync-footer">
+        <div class="sync-footer-left">
+          <span class="sync-preview-label">Puntos actuales:</span>
+          <span class="sync-preview-pts" id="sync-preview-pts">0.00</span>
+        </div>
+        <div class="sync-footer-right">
+          <button class="btn-cancel" id="sync-cancel">Cancelar</button>
+          <button class="btn-save" id="sync-save">💾 Aplicar todos</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
