@@ -101,6 +101,7 @@
           </div>
         </div>
         <button class="btn-looker" id="btn-open-looker">📊 Ver Looker Studio</button>
+        <button class="btn-paste" id="btn-open-paste">📋 Pegar desde Looker</button>
         <button class="btn-sync" id="btn-open-sync">⚡ Actualizar valores</button>
         <button class="btn-reset" id="btn-reset">🔄 Resetear</button>
       </div>
@@ -246,6 +247,67 @@
         <div class="sync-footer-right">
           <button class="btn-cancel" id="sync-cancel">Cancelar</button>
           <button class="btn-save" id="sync-save">💾 Aplicar todos</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================
+       MODAL PEGAR DATOS DESDE LOOKER
+       ================================================ -->
+  <div class="modal-overlay" id="paste-overlay">
+    <div class="modal paste-modal" id="paste-modal">
+      <div class="modal-header">
+        <div class="paste-modal-title">
+          <span>📋</span>
+          <div>
+            <h3>Pegar datos desde Looker Studio</h3>
+            <small>Copia la tabla de tu reporte y pégala aquí</small>
+          </div>
+        </div>
+        <button class="modal-close" id="paste-modal-close">✕</button>
+      </div>
+      <div class="paste-modal-body">
+        <div class="paste-instructions">
+          <div class="paste-step">
+            <span class="paste-step-num">1</span>
+            <span>Abre tu reporte en <strong>Looker Studio</strong></span>
+          </div>
+          <div class="paste-step">
+            <span class="paste-step-num">2</span>
+            <span>Selecciona la tabla con los datos (Ctrl+A en la tabla)</span>
+          </div>
+          <div class="paste-step">
+            <span class="paste-step-num">3</span>
+            <span>Copia con <strong>Ctrl+C</strong> y pega aquí con <strong>Ctrl+V</strong></span>
+          </div>
+        </div>
+        <textarea
+          id="paste-textarea"
+          class="paste-textarea"
+          placeholder="Pega aquí los datos copiados de Looker Studio...
+
+Ejemplo de formato aceptado:
+Var SM V+A Soles y Dólares    300,000    876,046.76
+Facturación Pyme              2,568,000  841,274.57
+...
+
+También puedes pegar solo los números (uno por línea) en el mismo orden de la tabla."
+          rows="12"
+        ></textarea>
+        <div class="paste-preview" id="paste-preview" style="display:none">
+          <h4>✅ Valores detectados:</h4>
+          <div class="paste-preview-list" id="paste-preview-list"></div>
+        </div>
+        <div class="paste-error" id="paste-error" style="display:none"></div>
+      </div>
+      <div class="modal-footer paste-footer">
+        <div class="paste-footer-left">
+          <span class="paste-detected" id="paste-detected">0 valores detectados</span>
+        </div>
+        <div class="paste-footer-right">
+          <button class="btn-cancel" id="paste-cancel">Cancelar</button>
+          <button class="btn-save" id="paste-apply" disabled>📋 Aplicar datos</button>
         </div>
       </div>
     </div>

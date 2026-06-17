@@ -780,7 +780,289 @@ function initSyncModal() {
 }
 
 // --------------------------------------------------
-// 15. INIT
+// 15. PASTE FROM LOOKER MODAL
+// --------------------------------------------------
+let parsedPasteData = []; // array of { id, rubro, newValue, oldValue }
+
+/**
+ * Normaliza un texto para comparación fuzzy:
+ * elimina acentos, pasa a minúsculas, elimina chars especiales.
+ */
+function normalize(str) {
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Calcula similitud entre dos strings (0-1)
+ * Basado en tokens compartidos
+ */
+function similarity(a, b) {
+  const tokensA = normalize(a).split(' ').filter(t => t.length > 2);
+  const tokensB = normalize(b).split(' ').filter(t => t.length > 2);
+  if (tokensA.length === 0 || tokensB.length === 0) return 0;
+
+  let matches = 0;
+  for (const ta of tokensA) {
+    for (const tb of tokensB) {
+      if (ta === tb || ta.includes(tb) || tb.includes(ta)) {
+        matches++;
+        break;
+      }
+    }
+  }
+  return matches / Math.max(tokensA.length, tokensB.length);
+}
+
+/**
+ * Parsea un string numérico con formatos variados:
+ * "876,046.76" → 876046.76
+ * "876.046,76" → 876046.76 (formato europeo)
+ * "-44,197.36" → -44197.36
+ * "1 508"      → 1508
+ */
+function parseNumber(str) {
+  if (!str) return null;
+  let s = str.trim().replace(/\s/g, '');
+
+  // Detectar formato europeo (punto como separador de miles, coma como decimal)
+  // vs. formato US (coma como separador de miles, punto como decimal)
+  const lastComma = s.lastIndexOf(',');
+  const lastDot   = s.lastIndexOf('.');
+
+  if (lastComma > lastDot && lastComma > 0) {
+    // Formato europeo: 876.046,76
+    s = s.replace(/\./g, '').replace(',', '.');
+  } else {
+    // Formato US: 876,046.76
+    s = s.replace(/,/g, '');
+  }
+
+  const n = parseFloat(s);
+  return isNaN(n) ? null : n;
+}
+
+/**
+ * Intenta parsear el texto pegado y asociar valores a los goals.
+ * Estrategias:
+ *  1. Detectar filas con nombre de rubro → extraer último número como "real"
+ *  2. Si solo hay números (uno por línea), asignar en orden a los goals activos
+ */
+function parsePastedData(text) {
+  const results = [];
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+  if (lines.length === 0) return results;
+
+  const activeGoals = goals.filter(g => !g.isMultiplicador && g.meta > 0);
+
+  // Estrategia 1: Intentar match por nombre de rubro
+  const matchedById = new Set();
+
+  for (const line of lines) {
+    // Separar por tabs o múltiples espacios
+    const parts = line.split(/\t|(?:  +)/).map(p => p.trim()).filter(p => p);
+
+    if (parts.length >= 2) {
+      // Buscar qué parte es texto (rubro) y cuáles son números
+      const textParts = [];
+      const numParts = [];
+
+      for (const part of parts) {
+        const num = parseNumber(part);
+        if (num !== null && /[\d]/.test(part)) {
+          numParts.push(num);
+        } else {
+          textParts.push(part);
+        }
+      }
+
+      if (textParts.length > 0 && numParts.length > 0) {
+        const rubroText = textParts.join(' ');
+
+        // Buscar el goal más similar
+        let bestMatch = null;
+        let bestScore = 0;
+
+        for (const goal of activeGoals) {
+          if (matchedById.has(goal.id)) continue;
+          const score = similarity(rubroText, goal.rubro);
+          if (score > bestScore && score >= 0.35) {
+            bestScore = score;
+            bestMatch = goal;
+          }
+        }
+
+        if (bestMatch) {
+          // Tomar el último número como "real" (generalmente va: meta, real, o solo real)
+          const realValue = numParts[numParts.length - 1];
+          matchedById.add(bestMatch.id);
+          results.push({
+            id: bestMatch.id,
+            rubro: bestMatch.rubro,
+            newValue: realValue,
+            oldValue: bestMatch.real,
+          });
+        }
+      }
+    }
+  }
+
+  // Estrategia 2: Si no se encontró ningún match por rubro,
+  // intentar asignar números en orden
+  if (results.length === 0) {
+    const allNumbers = [];
+    for (const line of lines) {
+      const num = parseNumber(line.replace(/\t/g, '').trim());
+      if (num !== null) {
+        allNumbers.push(num);
+      } else {
+        // Intentar extraer números de la línea
+        const matches = line.match(/-?[\d.,]+/g);
+        if (matches) {
+          for (const m of matches) {
+            const n = parseNumber(m);
+            if (n !== null) allNumbers.push(n);
+          }
+        }
+      }
+    }
+
+    // Si tenemos exactamente la misma cantidad o más que los goals activos,
+    // asignar en orden
+    if (allNumbers.length >= activeGoals.length) {
+      for (let i = 0; i < activeGoals.length; i++) {
+        results.push({
+          id: activeGoals[i].id,
+          rubro: activeGoals[i].rubro,
+          newValue: allNumbers[i],
+          oldValue: activeGoals[i].real,
+        });
+      }
+    } else if (allNumbers.length > 0) {
+      // Asignar los que tengamos
+      for (let i = 0; i < Math.min(allNumbers.length, activeGoals.length); i++) {
+        results.push({
+          id: activeGoals[i].id,
+          rubro: activeGoals[i].rubro,
+          newValue: allNumbers[i],
+          oldValue: activeGoals[i].real,
+        });
+      }
+    }
+  }
+
+  return results;
+}
+
+function openPasteModal() {
+  document.getElementById('paste-textarea').value = '';
+  document.getElementById('paste-preview').style.display = 'none';
+  document.getElementById('paste-error').style.display = 'none';
+  document.getElementById('paste-detected').textContent = '0 valores detectados';
+  document.getElementById('paste-apply').disabled = true;
+  parsedPasteData = [];
+  document.getElementById('paste-overlay').classList.add('active');
+  setTimeout(() => document.getElementById('paste-textarea').focus(), 200);
+}
+
+function closePasteModal() {
+  document.getElementById('paste-overlay').classList.remove('active');
+  parsedPasteData = [];
+}
+
+function onPasteTextareaInput() {
+  const text = document.getElementById('paste-textarea').value;
+  const preview = document.getElementById('paste-preview');
+  const previewList = document.getElementById('paste-preview-list');
+  const error = document.getElementById('paste-error');
+  const detected = document.getElementById('paste-detected');
+  const applyBtn = document.getElementById('paste-apply');
+
+  if (!text.trim()) {
+    preview.style.display = 'none';
+    error.style.display = 'none';
+    detected.textContent = '0 valores detectados';
+    applyBtn.disabled = true;
+    parsedPasteData = [];
+    return;
+  }
+
+  parsedPasteData = parsePastedData(text);
+
+  if (parsedPasteData.length === 0) {
+    preview.style.display = 'none';
+    error.style.display = 'block';
+    error.textContent = '⚠️ No se pudieron detectar valores. Asegúrate de copiar la tabla completa desde Looker Studio, o pega los números (uno por línea) en el orden de la tabla.';
+    detected.textContent = '0 valores detectados';
+    applyBtn.disabled = true;
+    return;
+  }
+
+  // Show preview
+  error.style.display = 'none';
+  preview.style.display = 'block';
+  previewList.innerHTML = '';
+
+  parsedPasteData.forEach(item => {
+    const changed = item.newValue !== item.oldValue;
+    const div = document.createElement('div');
+    div.className = `paste-preview-item ${changed ? '' : 'pp-unchanged'}`;
+    div.innerHTML = `
+      <span class="pp-rubro">${item.rubro}</span>
+      <span class="pp-old">${fmt(item.oldValue)}</span>
+      <span class="pp-arrow">→</span>
+      <span class="pp-new">${fmt(item.newValue)}</span>
+    `;
+    previewList.appendChild(div);
+  });
+
+  detected.textContent = `${parsedPasteData.length} valores detectados`;
+  detected.style.color = 'var(--green)';
+  applyBtn.disabled = false;
+}
+
+function applyPasteData() {
+  if (parsedPasteData.length === 0) return;
+
+  parsedPasteData.forEach(item => {
+    const goal = goals.find(g => g.id === item.id);
+    if (goal) goal.real = item.newValue;
+  });
+
+  closePasteModal();
+  saveToStorage();
+  showLastUpdate();
+  renderTable();
+  updateProjectionPill(currentSimDay);
+}
+
+function initPasteModal() {
+  document.getElementById('btn-open-paste').addEventListener('click', openPasteModal);
+  document.getElementById('paste-modal-close').addEventListener('click', closePasteModal);
+  document.getElementById('paste-cancel').addEventListener('click', closePasteModal);
+  document.getElementById('paste-apply').addEventListener('click', applyPasteData);
+  document.getElementById('paste-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('paste-overlay')) closePasteModal();
+  });
+
+  // Detectar cambios en el textarea (input + paste event)
+  const textarea = document.getElementById('paste-textarea');
+  textarea.addEventListener('input', onPasteTextareaInput);
+  textarea.addEventListener('paste', () => {
+    // El evento paste ocurre antes de que el valor se actualice,
+    // así que usamos setTimeout
+    setTimeout(onPasteTextareaInput, 50);
+  });
+}
+
+// --------------------------------------------------
+// 16. INIT
 // --------------------------------------------------
 function init() {
   // Cargar desde localStorage si hay datos guardados
@@ -810,7 +1092,7 @@ function init() {
     if (e.target === document.getElementById('modal-overlay')) closeModal();
   });
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { closeModal(); closeSyncModal(); closeDrawer(); }
+    if (e.key === 'Escape') { closeModal(); closeSyncModal(); closeDrawer(); closePasteModal(); }
     if (e.key === 'Enter' && document.getElementById('modal-overlay').classList.contains('active')) saveModal();
   });
 
@@ -822,6 +1104,10 @@ function init() {
 
   // Sync modal
   initSyncModal();
+
+  // Paste from Looker modal
+  initPasteModal();
 }
 
 document.addEventListener('DOMContentLoaded', init);
+

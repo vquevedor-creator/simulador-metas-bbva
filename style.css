@@ -1297,5 +1297,223 @@ body {
 
   .sync-modal-body { grid-template-columns: 1fr; }
   .ls-drawer { width: 100vw; min-width: unset; right: -105vw; }
+  .paste-modal { width: 95vw; }
+}
+
+/* ===========================
+   PASTE FROM LOOKER BUTTON
+   =========================== */
+.btn-paste {
+  background: linear-gradient(135deg, rgba(139,92,246,0.2), rgba(168,85,247,0.3));
+  border: 1px solid rgba(139,92,246,0.4);
+  color: #c4b5fd;
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.82rem;
+  transition: all 0.25s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-paste:hover {
+  background: linear-gradient(135deg, rgba(139,92,246,0.35), rgba(168,85,247,0.45));
+  border-color: rgba(139,92,246,0.7);
+  box-shadow: 0 0 20px rgba(139,92,246,0.3);
+  transform: translateY(-1px);
+}
+
+/* ===========================
+   PASTE MODAL
+   =========================== */
+.paste-modal {
+  max-width: 680px;
+  width: 90vw;
+}
+
+.paste-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.paste-modal-title span:first-child {
+  font-size: 1.6rem;
+}
+
+.paste-modal-title h3 {
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.paste-modal-title small {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+.paste-modal-body {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: 65vh;
+  overflow-y: auto;
+}
+
+/* Instructions */
+.paste-instructions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.paste-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(139,92,246,0.08);
+  border: 1px solid rgba(139,92,246,0.15);
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  flex: 1;
+  min-width: 180px;
+}
+
+.paste-step-num {
+  background: rgba(139,92,246,0.25);
+  color: #c4b5fd;
+  font-weight: 800;
+  font-size: 0.7rem;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Textarea */
+.paste-textarea {
+  width: 100%;
+  min-height: 180px;
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: 'Inter', monospace;
+  font-size: 0.82rem;
+  padding: 14px;
+  resize: vertical;
+  transition: border-color 0.3s;
+  line-height: 1.6;
+}
+
+.paste-textarea:focus {
+  outline: none;
+  border-color: rgba(139,92,246,0.6);
+  box-shadow: 0 0 12px rgba(139,92,246,0.15);
+}
+
+.paste-textarea::placeholder {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+/* Preview */
+.paste-preview {
+  background: rgba(16,185,129,0.06);
+  border: 1px solid rgba(16,185,129,0.2);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+}
+
+.paste-preview h4 {
+  font-size: 0.82rem;
+  color: var(--green);
+  margin-bottom: 10px;
+}
+
+.paste-preview-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.paste-preview-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  background: rgba(16,185,129,0.05);
+  border-radius: 6px;
+  font-size: 0.78rem;
+}
+
+.paste-preview-item .pp-rubro {
+  color: var(--text-secondary);
+  flex: 1;
+}
+
+.paste-preview-item .pp-old {
+  color: var(--text-muted);
+  text-decoration: line-through;
+  margin-right: 10px;
+  font-size: 0.72rem;
+}
+
+.paste-preview-item .pp-new {
+  color: var(--green);
+  font-weight: 700;
+}
+
+.paste-preview-item .pp-arrow {
+  color: var(--text-muted);
+  margin: 0 6px;
+  font-size: 0.7rem;
+}
+
+.paste-preview-item.pp-unchanged .pp-new {
+  color: var(--text-muted);
+}
+
+/* Error */
+.paste-error {
+  background: rgba(239,68,68,0.08);
+  border: 1px solid rgba(239,68,68,0.2);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  color: #f87171;
+  font-size: 0.78rem;
+}
+
+/* Footer */
+.paste-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.paste-footer-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.paste-footer-right {
+  display: flex;
+  gap: 10px;
+}
+
+.paste-detected {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-weight: 600;
 }
 
