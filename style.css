@@ -853,13 +853,33 @@ tfoot {
 /* ===========================
    LOOKER SPLIT SCREEN
    =========================== */
+body.split-mode {
+  overflow: hidden;
+  height: 100vh;
+  display: flex;
+  flex-direction: row;
+}
+
+body.split-mode .app-background {
+  width: 50vw;
+}
+
+body.split-mode .app-container {
+  width: 50vw;
+  max-width: 50vw;
+  overflow-y: auto;
+  height: 100vh;
+  padding: 16px;
+  flex-shrink: 0;
+}
+
 .ls-split-panel {
   position: fixed;
   top: 0; right: 0;
   width: 50vw;
   height: 100vh;
   background: var(--bg-deep);
-  border-left: 1px solid var(--border-glass);
+  border-left: 2px solid var(--accent-cyan);
   box-shadow: -10px 0 30px rgba(0,0,0,0.5);
   z-index: 1000;
   display: none;
@@ -868,12 +888,6 @@ tfoot {
 
 .ls-split-panel.open {
   display: flex;
-}
-
-body.split-mode .app-container {
-  width: 50vw;
-  overflow-y: auto;
-  max-height: 100vh;
 }
 
 .ls-split-header {
