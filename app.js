@@ -580,19 +580,32 @@ function resetData() {
 const LS_URL = 'https://lookerstudio.google.com/embed/reporting/225582d5-e39b-4e5e-bdcb-f25cebd5ae71/page/p_oitiw9jc2d';
 
 function toggleDrawer(open) {
-  document.getElementById('ls-drawer').classList.toggle('open', open);
-  document.getElementById('ls-backdrop').classList.toggle('active', open);
-  document.body.style.overflow = open ? 'hidden' : '';
+  const panel = document.getElementById('ls-split-panel');
+  panel.classList.toggle('open', open);
+  document.body.classList.toggle('split-mode', open);
+  
+  if (open) {
+    loadLooker();
+  }
 }
 
 function loadLooker() {
   const iframe = document.getElementById('ls-iframe');
-  document.getElementById('ls-login-notice').style.display = 'none';
-  document.getElementById('ls-loading').style.display = 'flex';
-  iframe.style.display = 'none';
-  iframe.src = LS_URL;
+  const loading = document.getElementById('ls-loading');
+  
+  if (iframe.src && iframe.src !== '' && iframe.src !== 'about:blank') {
+    // Ya está cargado, solo refrescar
+    loading.style.display = 'flex';
+    iframe.style.display = 'none';
+    iframe.src = LS_URL;
+  } else {
+    loading.style.display = 'flex';
+    iframe.style.display = 'none';
+    iframe.src = LS_URL;
+  }
+  
   iframe.onload = () => {
-    document.getElementById('ls-loading').style.display = 'none';
+    loading.style.display = 'none';
     iframe.style.display = 'block';
   };
 }
@@ -623,8 +636,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-reset').addEventListener('click', resetData);
   document.getElementById('btn-open-looker').addEventListener('click', () => toggleDrawer(true));
   document.getElementById('ls-btn-close').addEventListener('click', () => toggleDrawer(false));
-  document.getElementById('ls-backdrop').addEventListener('click', () => toggleDrawer(false));
-  document.getElementById('ls-btn-load').addEventListener('click', loadLooker);
   document.getElementById('ls-btn-refresh').addEventListener('click', loadLooker);
   
   const btnImport = document.getElementById('ls-btn-import');
@@ -633,39 +644,86 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         const text = await navigator.clipboard.readText();
         if (!text || text.trim() === '') {
-          alert('El portapapeles está vacío. Copia los datos desde Looker Studio primero.');
+          alert('El portapapeles está vacío.\n\nInstrucciones:\n1. Selecciona la tabla de metas en Looker Studio.\n2. Presiona Ctrl+C (o Cmd+C) para copiar.\n3. Vuelve a hacer clic en este botón.');
           return;
         }
-        let updatedCount = 0;
-        const lines = text.split('\n');
-        lines.forEach(line => {
-          const cols = line.split('\t').map(c => c.trim());
-          if (cols.length < 2) return;
-          const rubroStr = cols[0].toLowerCase();
-          const goal = goals.find(g => {
-            const gName = g.rubro.toLowerCase();
-            return rubroStr.includes(gName) || gName.includes(rubroStr);
-          });
-          if (goal) {
-            const nums = cols.slice(1).map(c => parseFloat(c.replace(/S\/\s?/g, '').replace(/,/g, '').trim())).filter(n => !isNaN(n));
-            const realCandidates = nums.filter(n => Math.abs(n - goal.meta) > 0.01 || n === 0);
-            if (realCandidates.length > 0) {
-               goal.real = realCandidates[0];
-               if (realCandidates.length > 1) goal.avance = realCandidates[1];
-               else goal.avance = 0;
-               updatedCount++;
-            }
+
+        const normalize = (s) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+        
+        function parseLookerNumber(str) {
+          let clean = str.replace(/S\/\.?\s?/gi, '').replace(/%/g, '').trim();
+          if (clean === '-' || clean === '') return 0;
+          
+          const lastComma = clean.lastIndexOf(',');
+          const lastDot = clean.lastIndexOf('.');
+          if (lastComma > lastDot) {
+            clean = clean.replace(/\./g, '').replace(',', '.');
+          } else if (lastDot > lastComma) {
+            clean = clean.replace(/,/g, '');
+          } else if (lastComma > -1) {
+            if (clean.length - lastComma <= 3) clean = clean.replace(',', '.');
+            else clean = clean.replace(/,/g, '');
           }
-        });
+          clean = clean.replace(/\s/g, '');
+          const n = parseFloat(clean);
+          return isNaN(n) ? Number.NaN : n;
+        }
+
+        const allTokens = text.split(/[\n\t]+/).map(t => t.trim()).filter(t => t.length > 0);
+        let updatedCount = 0;
+        let i = 0;
+
+        while (i < allTokens.length) {
+           const token = allTokens[i];
+           const nSearch = normalize(token);
+           
+           const goal = goals.find(g => {
+             const nName = normalize(g.rubro);
+             return nSearch === nName || (nSearch.length > 5 && (nSearch.includes(nName) || nName.includes(nSearch)));
+           });
+           
+           if (goal) {
+              const nums = [];
+              let j = i + 1;
+              while (j < allTokens.length) {
+                const nextTok = allTokens[j];
+                if (nextTok.match(/^S\/?$/i)) { j++; continue; }
+                const n = parseLookerNumber(nextTok);
+                if (!isNaN(n)) {
+                  nums.push(n);
+                  j++;
+                } else {
+                  break;
+                }
+              }
+              
+              if (nums.length > 0) {
+                 const realCandidates = nums.filter(n => Math.abs(n - goal.meta) > 0.01 || n === 0);
+                 if (realCandidates.length > 0) {
+                    goal.real = realCandidates[0];
+                    if (realCandidates.length > 1) {
+                       goal.avance = realCandidates[1];
+                    } else {
+                       goal.avance = 0;
+                    }
+                    updatedCount++;
+                 }
+              }
+              i = j;
+           } else {
+              i++;
+           }
+        }
+
         if (updatedCount > 0) {
           saveToStorage();
           updateAll();
-          alert(`✅ Éxito: Se actualizaron ${updatedCount} metas con los datos del portapapeles.`);
+          alert(`✅ ¡Magia pura! Se leyeron y actualizaron ${updatedCount} metas basándose en lo que copiaste.`);
         } else {
-          alert('No se reconocieron datos compatibles en el portapapeles. Asegúrate de copiar la tabla correcta.');
+          alert('No se reconocieron datos compatibles.\nRecuerda seleccionar los nombres de las metas junto con sus números en Looker Studio y copiar (Ctrl+C).');
         }
       } catch (err) {
-        alert('No se pudo acceder al portapapeles. Es posible que debas darle permisos a tu navegador, o intentar usar otro navegador.');
+        alert('No se pudo acceder al portapapeles. Es posible que debas darle permisos a tu navegador.');
       }
     });
   }

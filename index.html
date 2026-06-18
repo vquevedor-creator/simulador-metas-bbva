@@ -181,9 +181,9 @@
     </main>
   </div>
 
-  <!-- LOOKER STUDIO DRAWER -->
-  <div class="ls-drawer" id="ls-drawer">
-    <div class="ls-drawer-header glass-header">
+  <!-- LOOKER STUDIO SPLIT PANEL -->
+  <div class="ls-split-panel" id="ls-split-panel">
+    <div class="ls-split-header glass-header">
       <div class="ls-drawer-title">
         <div class="icon-box">📊</div>
         <div>
@@ -199,12 +199,10 @@
         <button class="icon-btn" id="ls-btn-close" title="Cerrar">✕</button>
       </div>
     </div>
-    <div class="ls-drawer-body">
-      <div class="ls-login-notice" id="ls-login-notice">
-        <div class="notice-icon">🔐</div>
-        <h3>Autenticación Requerida</h3>
-        <p>Asegúrate de estar logueado con tu cuenta corporativa de Google para ver el reporte.</p>
-        <button class="btn-premium mt-4" id="ls-btn-load">Cargar Reporte</button>
+    <div class="ls-split-body">
+      <div class="ls-loading" id="ls-loading">
+        <div class="spinner"></div>
+        <p>Conectando con Looker Studio...</p>
       </div>
       <iframe
         id="ls-iframe"
@@ -215,13 +213,8 @@
         style="display:none"
         title="Looker Studio"
       ></iframe>
-      <div class="ls-loading" id="ls-loading" style="display:none">
-        <div class="spinner"></div>
-        <p>Conectando con Looker Studio...</p>
-      </div>
     </div>
   </div>
-  <div class="ls-backdrop" id="ls-backdrop"></div>
 
   <script src="app.js"></script>
 </body>
